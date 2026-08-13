@@ -1,45 +1,299 @@
 <!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
-<head>
+  <head>
     <!-- Office JavaScript API -->
-    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-</head>
+    <script
+      type="text/javascript"
+      src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"
+    ></script>
+  </head>
 
-<body>
-    <p>This add-in will insert the text 'Hello world!'.</p>
-    <button id="helloButton">Say hello</button>
+  <body>
+    <h2>Word Add-in Controls</h2>
+    <div style="margin: 10px 0">
+      <button id="addBookmarkButton">Add Bookmark (hehe)</button>
+      <button id="goEndButton">Go to End</button>
+      <button id="goHomeButton">Go to Home</button>
+      <button id="jumpBookmarkButton">Jump to Bookmark</button>
+      <button id="insertDatetimeButton">Insert DateTime</button>
+      <button id="putBookmarkButton">Put Bookmark (datetime)</button>
+      <button id="markReviewedButton">Mark Reviewed</button>
+      <button id="selectBetweenBookmarksButton">
+        Select Between Bookmarks
+      </button>
+    </div>
 
     <!-- The following image URL tracks diagnostic data for this sample add-in. Please remove the image tag if you reuse this sample in your own code project. -->
-    <img src="https://pnptelemetry.azurewebsites.net/pnp-officeaddins/samples/word-add-in-hello-world-run" />
-</body>
+    <img
+      src="https://pnptelemetry.azurewebsites.net/pnp-officeaddins/samples/word-add-in-hello-world-run"
+    />
+  </body>
 
-<script>
+  <script>
     Office.onReady((info) => {
-        // Check that we loaded into Word
-        if (info.host === Office.HostType.Word) {
-            document.getElementById("helloButton").onclick = sayHello;
-        }
-    });
-
-    function sayHello() {
-        return Word.run((context) => {
-
-            // insert a paragraph at the start of the document.
-            const paragraph = context.document.body.insertParagraph("Hello World", Word.InsertLocation.start);
-            
-            // sync the context to run the previous API call, and return.
-            return context.sync();
-        });
-    }
-    // Add keyboard shortcut listener
-    document.addEventListener("keydown", function (event) {
-      if (event.ctrlKey && event.altKey && event.key.toLowerCase() === "i") {
-        event.preventDefault(); // prevent default browser behavior
-        sayHello();
+      // Check that we loaded into Word
+      if (info.host === Office.HostType.Word) {
+        document.getElementById("addBookmarkButton").onclick = addBookmarkHere;
+        document.getElementById("goEndButton").onclick = goEnd;
+        document.getElementById("goHomeButton").onclick = goHome;
+        document.getElementById("jumpBookmarkButton").onclick = jumpToBookmark;
+        document.getElementById("insertDatetimeButton").onclick =
+          insertDatetime;
+        document.getElementById("putBookmarkButton").onclick = putBookmark;
+        document.getElementById("markReviewedButton").onclick = markReviewed;
+        document.getElementById("selectBetweenBookmarksButton").onclick =
+          selectTextBetweenBookmarks;
       }
     });
-</script>
 
+    // Helper: Format date as yyyy-MM-dd
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    // Helper: Format time as HH.MM.SS
+    function formatTime(date) {
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const seconds = String(date.getSeconds()).padStart(2, "0");
+      return `${hours}.${minutes}.${seconds}`;
+    }
+
+    // Sub add_bookmark_here() - Add a bookmark named "hehe" at current selection
+    function addBookmarkHere() {
+      return Word.run((context) => {
+        const selection = context.document.body
+          .getRange("Start")
+          .moveStart(Word.RangeLocation.start, 0);
+        context.document.body.insertBookmark(selection, "hehe");
+        return context.sync();
+      });
+    }
+
+    // Sub go_end() - Go to end of document, add bookmark, insert paragraph
+    function goEnd() {
+      return Word.run((context) => {
+        const endRange = context.document.body.getRange("End");
+        endRange.insertBookmark("hehe");
+        endRange.insertParagraph("", Word.InsertLocation.after);
+        return context.sync();
+      });
+    }
+
+    // Sub go_home() - Go to beginning, add bookmark, move up
+    function goHome() {
+      return Word.run((context) => {
+        const startRange = context.document.body.getRange("Start");
+        startRange.insertBookmark("hehe");
+        const paragraph = context.document.body.insertParagraph(
+          "",
+          Word.InsertLocation.start,
+        );
+        // Move selection up one line
+        context.document.body.getRange("Start").select();
+        return context.sync();
+      });
+    }
+
+    // Sub bookmark_up() / Jump to bookmark - Jump to bookmark named "hehe"
+    function jumpToBookmark() {
+      return Word.run((context) => {
+        // Get all bookmarks
+        const bookmarks = context.document.bookmarks;
+        bookmarks.load("items");
+        return context.sync().then(() => {
+          const heheBookmark = bookmarks.getItem("hehe");
+          if (heheBookmark) {
+            heheBookmark.getRange("Start").select();
+            return context.sync();
+          } else {
+            alert("Bookmark 'hehe' not found");
+          }
+        });
+      });
+    }
+
+    // Sub insertDatetime() - Insert current date as text (yyyy-MM-dd format)
+    function insertDatetime() {
+      return Word.run((context) => {
+        const now = new Date();
+        const dateStr = formatDate(now);
+        const selection = context.document.getSelection();
+        selection.insertText(dateStr, Word.InsertLocation.replace);
+        return context.sync();
+      });
+    }
+
+    // Sub putBookmark() - Create bookmark based on current datetime
+    function putBookmark() {
+      return Word.run((context) => {
+        const selection = context.document.getSelection();
+
+        // Only add bookmark if there is actual selected content
+        if (selection.isEmpty === false) {
+          const now = new Date();
+          // Create unique bookmark name: a_YYYYMMDD_HHMMSS format
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, "0");
+          const day = String(now.getDate()).padStart(2, "0");
+          const hours = String(now.getHours()).padStart(2, "0");
+          const minutes = String(now.getMinutes()).padStart(2, "0");
+          const seconds = String(now.getSeconds()).padStart(2, "0");
+
+          const bookmarkName = `a_${year}${month}${day}_${hours}${minutes}${seconds}`;
+          selection.insertBookmark(bookmarkName);
+        } else {
+          // If no selection, create bookmark at current position
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, "0");
+          const day = String(now.getDate()).padStart(2, "0");
+          const hours = String(now.getHours()).padStart(2, "0");
+          const minutes = String(now.getMinutes()).padStart(2, "0");
+          const seconds = String(now.getSeconds()).padStart(2, "0");
+
+          const bookmarkName = `a_${year}${month}${day}_${hours}${minutes}${seconds}`;
+          selection.insertBookmark(bookmarkName);
+        }
+        return context.sync();
+      });
+    }
+
+    // Helper: Extract review count from text using regex
+    function extractReviewCount(text) {
+      const match = text.match(/\|(\d{1,3})\|/);
+      return match ? parseInt(match[1]) : 0;
+    }
+
+    // Helper: Get updated value with review count
+    function getUpdatedReviewValue(text) {
+      const currentCount = extractReviewCount(text);
+      if (currentCount === 0) {
+        return "|1|";
+      } else {
+        return `|${currentCount + 1}|`;
+      }
+    }
+
+    // Helper: Remove old review marker from text
+    function removeOldReviewMarker(text) {
+      return text.replace(/\s*\**\s*(\|\d+\|\s*)*/g, "").trim();
+    }
+
+    // Sub markReviewed() - Add or increment review count at beginning of paragraph
+    function markReviewed() {
+      return Word.run((context) => {
+        // Get current selection and expand to paragraph
+        const selection = context.document.getSelection();
+        selection.load("text");
+
+        return context.sync().then(() => {
+          const paragraphs = context.document.body.paragraphs;
+          paragraphs.load("items/text,items/range");
+
+          return context.sync().then(() => {
+            // Find paragraph containing selection
+            const selectionText = selection.text;
+
+            for (let i = 0; i < paragraphs.items.length; i++) {
+              const para = paragraphs.items[i];
+              const paraText = para.text;
+
+              if (
+                paraText.length > 4 &&
+                selectionText.length > 0 &&
+                paraText.includes(selectionText)
+              ) {
+                const newValue = getUpdatedReviewValue(paraText);
+                const currentCount = extractReviewCount(paraText);
+
+                if (currentCount === 0) {
+                  // No existing review marker, insert |1|
+                  para.insertText(`${newValue} `, Word.InsertLocation.start);
+                } else {
+                  // Replace existing marker
+                  const oldMatch = paraText.match(/\s*\**\s*\|\d+\|\s*/);
+                  if (oldMatch) {
+                    const oldValue = oldMatch[0];
+                    const searchResults = para
+                      .getRange()
+                      .getRange("Start")
+                      .getRange("End")
+                      .search(oldValue, { matchCase: false });
+
+                    // Replace first occurrence
+                    searchResults.load("items");
+                    return context.sync().then(() => {
+                      if (searchResults.items.length > 0) {
+                        searchResults.items[0].insertText(
+                          `${newValue} `,
+                          Word.InsertLocation.replace,
+                        );
+                      }
+                      return context.sync();
+                    });
+                  }
+                }
+                return context.sync();
+              }
+            }
+          });
+        });
+      });
+    }
+
+    // Sub SelectTextBetweenBookmarks() - Select text between bookmark "hehe" and current cursor
+    function selectTextBetweenBookmarks() {
+      return Word.run((context) => {
+        const bookmarks = context.document.bookmarks;
+        bookmarks.load("items");
+
+        return context.sync().then(() => {
+          const heheBookmark = bookmarks.getItem("hehe");
+          if (!heheBookmark) {
+            alert("Bookmark 'hehe' not found");
+            return context.sync();
+          }
+
+          // Get bookmark range start position
+          heheBookmark.load("range/start");
+          return context.sync().then(() => {
+            // Get current selection
+            const selection = context.document.getSelection();
+            selection.load("start,end");
+
+            return context.sync().then(() => {
+              const bookmarkStart = heheBookmark.range.getRange("Start");
+              bookmarkStart.load("start");
+
+              return context.sync().then(() => {
+                // Create range between bookmark and current selection
+                const startPos = bookmarkStart.start;
+                const endPos = selection.end;
+
+                if (startPos <= endPos) {
+                  const rangeToSelect = context.document.body
+                    .getRange("Start")
+                    .moveStart(Word.RangeLocation.start, startPos)
+                    .moveEnd(Word.RangeLocation.start, endPos - startPos);
+                  rangeToSelect.select();
+                } else {
+                  const rangeToSelect = context.document.body
+                    .getRange("Start")
+                    .moveStart(Word.RangeLocation.start, endPos)
+                    .moveEnd(Word.RangeLocation.start, startPos - endPos);
+                  rangeToSelect.select();
+                }
+                return context.sync();
+              });
+            });
+          });
+        });
+      });
+    }
+  </script>
 </html>
