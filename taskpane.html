@@ -12,7 +12,7 @@
   <body>
     <h2>Word Add-in Controls</h2>
     <div style="margin: 10px 0">
-      <button id="addBookmarkButton">Add Bookmark (hehe)</button>
+      <button id="addBookmarkButton">Add Bookmark (hehe2)</button>
       <button id="goEndButton">Go to End</button>
       <button id="goHomeButton">Go to Home</button>
       <button id="jumpBookmarkButton">Jump to Bookmark</button>
@@ -81,7 +81,7 @@
     //   });
     // }
 
-    export async function addBookmarkHere() {
+    async function addBookmarkHere() {
       await Word.run(async (context) => {
         const selection = context.document.getSelection();
 
@@ -96,7 +96,7 @@
       });
     }
 
-    export async function goEnd() {
+    async function goEnd() {
       await Word.run(async (context) => {
         await addBookmarkHere();
         const endRange = context.document.body.getRange("End");
