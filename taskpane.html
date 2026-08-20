@@ -19,9 +19,7 @@
       <button id="insertDatetimeButton">Insert DateTime</button>
       <button id="putBookmarkButton">Put Bookmark (datetime)</button>
       <button id="markReviewedButton">Mark Reviewed</button>
-      <button id="selectBetweenBookmarksButton">
-        Select Between Bookmarks
-      </button>
+      <button id="selectBetweenBookmarksButton">Select Between Bookmarks</button>
     </div>
 
     <!-- The following image URL tracks diagnostic data for this sample add-in. Please remove the image tag if you reuse this sample in your own code project. -->
@@ -38,8 +36,7 @@
         document.getElementById("goEndButton").onclick = goEnd;
         document.getElementById("goHomeButton").onclick = goHome;
         document.getElementById("jumpBookmarkButton").onclick = jumpToBookmark;
-        document.getElementById("insertDatetimeButton").onclick =
-          insertDatetime;
+        document.getElementById("insertDatetimeButton").onclick = insertDatetime;
         document.getElementById("putBookmarkButton").onclick = putBookmark;
         document.getElementById("markReviewedButton").onclick = markReviewed;
         document.getElementById("selectBetweenBookmarksButton").onclick =
@@ -63,23 +60,61 @@
       return `${hours}.${minutes}.${seconds}`;
     }
 
-    // Sub add_bookmark_here() - Add a bookmark named "hehe" at current selection
-    function addBookmarkHere() {
-      return Word.run((context) => {
-        const selection = context.document.body
-          .getRange("Start")
-          .moveStart(Word.RangeLocation.start, 0);
-        context.document.body.insertBookmark(selection, "hehe");
-        return context.sync();
+    // // Sub add_bookmark_here() - Add a bookmark named "hehe" at current selection
+    // function addBookmarkHere() {
+    //   return Word.run((context) => {
+    //     const selection = context.document.body
+    //       .getRange("Start")
+    //       .moveStart(Word.RangeLocation.start, 0);
+    //     context.document.body.insertBookmark(selection, "hehe");
+    //     return context.sync();
+    //   });
+    // }
+
+    // // Sub go_end() - Go to end of document, add bookmark, insert paragraph
+    // function goEnd() {
+    //   return Word.run((context) => {
+    //     const endRange = context.document.body.getRange("End");
+    //     // endRange.insertBookmark("hehe");
+    //     endRange.insertParagraph("", Word.InsertLocation.after);
+    //     return context.sync();
+    //   });
+    // }
+
+    export async function addBookmarkHere() {
+      await Word.run(async (context) => {
+        const selection = context.document.getSelection();
+
+        // Load the range so we can use it
+        selection.load("text");
+        await context.sync();
+
+        // Insert bookmark at the selection
+        selection.insertBookmark("hehe");
+
+        await context.sync();
       });
     }
 
-    // Sub go_end() - Go to end of document, add bookmark, insert paragraph
-    function goEnd() {
-      return Word.run((context) => {
+    export async function goEnd() {
+      await Word.run(async (context) => {
+        await addBookmarkHere();
         const endRange = context.document.body.getRange("End");
-        endRange.insertBookmark("hehe");
-        endRange.insertParagraph("", Word.InsertLocation.after);
+        // endRange.insertBookmark("hehe");
+        const newPara = endRange.insertParagraph("", Word.InsertLocation.after);
+        // context.document.body.getRange("End").select();
+        const caret = newPara.getRange("End");
+
+        // Select the zero-length range → cursor appears there
+        caret.select();
+        // // 2. Check compatibility and pull focus from the task pane to the document
+        // if (Office.context.requirements.isSetSupported("WordApiDesktop", "1.4")) {
+        //   document.getElementById("huhu").textContent = "Your updated text here.";
+        //   context.document.activeWindow.setFocus();
+        // }
+        // document.getElementById("huhu").textContent = "Your updated";
+        // context.document.activeWindow.setFocus();   //not work because this is not supported
+        // newPara.select();
         return context.sync();
       });
     }
@@ -89,10 +124,7 @@
       return Word.run((context) => {
         const startRange = context.document.body.getRange("Start");
         startRange.insertBookmark("hehe");
-        const paragraph = context.document.body.insertParagraph(
-          "",
-          Word.InsertLocation.start,
-        );
+        const paragraph = context.document.body.insertParagraph("", Word.InsertLocation.start);
         // Move selection up one line
         context.document.body.getRange("Start").select();
         return context.sync();
@@ -231,7 +263,7 @@
                       if (searchResults.items.length > 0) {
                         searchResults.items[0].insertText(
                           `${newValue} `,
-                          Word.InsertLocation.replace,
+                          Word.InsertLocation.replace
                         );
                       }
                       return context.sync();
