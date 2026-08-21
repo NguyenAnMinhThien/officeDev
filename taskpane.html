@@ -13,13 +13,14 @@
     <h2>Word Add-in Controls</h2>
     <!-- <div style="margin: 10px 0"> -->
     <div style="margin: 10px 0; display: flex; flex-direction: column; gap: 8px">
+      <button id="markReviewedButton">🏄‍♂️</button>
+
       <button id="addBookmarkButton">🚩</button>
       <button id="goEndButton">⬇️</button>
       <button id="goHomeButton">⬆️</button>
       <button id="jumpBookmarkButton">=>🚩</button>
       <button id="insertDatetimeButton">⏲️</button>
       <button id="putBookmarkButton">⏲️+🚩</button>
-      <button id="markReviewedButton">🏄‍♂️</button>
       <button id="selectBetweenBookmarksButton">⏾⋆.˚ 🌙</button>
       <button id="markGreenColor">✅️</button>
     </div>
@@ -346,7 +347,7 @@
         return context.sync();
       });
     }
-    
+
     async function insertDatetime() {
       await Word.run((context) => {
         const now = new Date();
