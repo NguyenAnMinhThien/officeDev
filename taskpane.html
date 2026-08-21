@@ -20,7 +20,7 @@
       <button id="insertDatetimeButton">⏲️</button>
       <button id="putBookmarkButton">⏲️+🚩</button>
       <button id="markReviewedButton">🏄‍♂️</button>
-      <button id="selectBetweenBookmarksButton">⏾⋆.˚  🌙</button>
+      <button id="selectBetweenBookmarksButton">⏾⋆.˚ 🌙</button>
       <button id="markGreenColor">✅️</button>
     </div>
 
@@ -343,6 +343,16 @@
         // Select the zero-length range → cursor appears there
         caret.select();
 
+        return context.sync();
+      });
+    }
+    
+    async function insertDatetime() {
+      await Word.run((context) => {
+        const now = new Date();
+        const dateStr = formatDate(now);
+        const selection = context.document.getSelection();
+        selection.insertText(dateStr, Word.InsertLocation.replace);
         return context.sync();
       });
     }
