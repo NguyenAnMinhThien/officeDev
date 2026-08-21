@@ -67,6 +67,8 @@ function removeOldReviewMarker(text) {
 
 export async function runWord() {
   return Word.run(async (context) => {
+
+
     // 2. success get all paragraphs and extract text inside >
     // 1. Get the current active user selection
     const selection = context.document.getSelection();
@@ -88,13 +90,43 @@ export async function runWord() {
       for (let i = 0; i < paragraphs.items.length; i++) {
         const para = paragraphs.items[i];
         console.log(`Paragraph ${i + 1}: ${para.text}`);
+        // para.font.color = "#0000FF";
+        para.font.color = "#00FF00";
+        // para.font.color = "Automatic";
       }
     } else {
       console.log("No paragraphs found in the current selection.");
     }
     await context.sync();
 
-    // return;
+    // 1. Get the current active user selection
+// const selection = context.document.getSelection();
+
+// // 2. Fetch the paragraphs collection inside that selection
+// const paragraphs = selection.paragraphs;
+// paragraphs.load("items/text, items/font/color");
+// await context.sync();
+// // 3. Set the font color directly on the collection using the White Hex string ("#FFFFFF")
+// paragraphs.font.color = "#FFFFFF";
+
+// // 4. Synchronize with the Word document engine to apply the change instantly
+// await context.sync();
+// console.log("All selected paragraphs have been set to white.");
+
+    // success Get the first paragraph of the current selection >
+    // const selection = context.document.getSelection();
+    // const firstParagraph = selection.paragraphs.getFirst();
+    // firstParagraph.load("text, font/color");
+    // await context.sync();
+
+    // // 1. succcess detec Red color >
+    // const isRedFound = await detectRedTextInParagraph(firstParagraph, context);
+    // console.log("Result: ", isRedFound);
+
+
+
+
+
   });
 }
 
@@ -123,7 +155,7 @@ export async function demo2() {
 
     // 3. CRITICAL: Load 'items' and the scalar properties you need for the loop
     // This resolves the "PropertyNotLoaded" error discussed earlier
-    paragraphs.load("items/text, items/range");
+    paragraphs.load("items/text, items/range, items/font/color");
 
     // 4. Synchronize with the Word document execution engine
     await context.sync();
@@ -141,8 +173,9 @@ export async function demo2() {
     for (let i = 0; i < paragraphs.items.length; i++) {
       const para = paragraphs.items[i];
       const paraText = para.text;
+      const hasRedText = await detectRedTextInParagraph(para, context);
 
-      if (paraText.length > 4 ) {
+      if (paraText.length > 4 && !hasRedText ) { 
         const newValue = getUpdatedReviewValue(paraText);
         const currentCount = extractReviewCount(paraText);
 
@@ -154,23 +187,207 @@ export async function demo2() {
           const oldMatch = paraText.match(/\s*\**\s*\|\d+\|\s*/);
           if (oldMatch) {
             const oldValue = oldMatch[0];
-            const searchResults = para
-              .getRange()
-              .getRange("Start")
-              .getRange("End")
-              .search(oldValue, { matchCase: false });
 
-            searchResults.load("items");
-            await context.sync();
 
-            if (searchResults.items.length > 0) {
-              searchResults.items[0].insertText(`${newValue} `, Word.InsertLocation.replace);
-            }
+            // replace here
+            // const searchResults = para
+            //   .getRange()
+            //   .getRange("Start")
+            //   .getRange("End")
+            //   .search(oldValue, { matchCase: false });
+
+            // searchResults.load("items");
+            // await context.sync();
+
+            // if (searchResults.items.length > 0) {
+            //   searchResults.items[0].insertText(`${newValue} `, Word.InsertLocation.replace);
+            // }
+
+
+
+        // 3. Search for the string target inside THIS paragraph
+        const searchResults = para.search(oldValue, { matchCase: false, matchWholeWord: false });
+        searchResults.load("items");
+        await context.sync();
+
+        // 4. Check if at least one match exists, then replace only the first item (index 0)
+        if (searchResults.items.length > 0) {
+            const firstMatchRange = searchResults.items[0];
+            firstMatchRange.insertText(newValue + " ", Word.InsertLocation.replace);
+        }
+
+
+
           }
         }
 
         await context.sync();
-        return;
+        
+      }
+    }
+  });
+}
+
+
+export async function greenParagraphs() {
+  return Word.run(async (context) => {
+
+
+    // 2. success get all paragraphs and extract text inside >
+    // 1. Get the current active user selection
+    const selection = context.document.getSelection();
+
+    // 2. Fetch the paragraphs collection inside that selection
+    const paragraphs = selection.paragraphs;
+
+    // 3. CRITICAL: Load 'items' and the scalar properties you need for the loop
+    // This resolves the "PropertyNotLoaded" error discussed earlier
+    paragraphs.load("items/text");
+
+    // 4. Synchronize with the Word document execution engine
+    await context.sync();
+
+    // 5. Safely loop through the retrieved paragraphs
+    if (paragraphs.items.length > 0) {
+      console.log(`Found ${paragraphs.items.length} paragraph(s) in selection:`);
+
+      for (let i = 0; i < paragraphs.items.length; i++) {
+        const para = paragraphs.items[i];
+        console.log(`Paragraph ${i + 1}: ${para.text}`);
+        // para.font.color = "#0000FF";
+        para.font.color = "#00FF00";
+        // para.font.color = "Automatic";
+      }
+    } else {
+      console.log("No paragraphs found in the current selection.");
+    }
+    await context.sync();
+
+    // 1. Get the current active user selection
+// const selection = context.document.getSelection();
+
+// // 2. Fetch the paragraphs collection inside that selection
+// const paragraphs = selection.paragraphs;
+// paragraphs.load("items/text, items/font/color");
+// await context.sync();
+// // 3. Set the font color directly on the collection using the White Hex string ("#FFFFFF")
+// paragraphs.font.color = "#FFFFFF";
+
+// // 4. Synchronize with the Word document engine to apply the change instantly
+// await context.sync();
+// console.log("All selected paragraphs have been set to white.");
+
+    // success Get the first paragraph of the current selection >
+    // const selection = context.document.getSelection();
+    // const firstParagraph = selection.paragraphs.getFirst();
+    // firstParagraph.load("text, font/color");
+    // await context.sync();
+
+    // // 1. succcess detec Red color >
+    // const isRedFound = await detectRedTextInParagraph(firstParagraph, context);
+    // console.log("Result: ", isRedFound);
+
+
+
+
+
+  });
+}
+
+
+export async function markReviewed() {
+  await Word.run(async (context) => {
+    // // Get the first paragraph of the current selection
+    // const selection = context.document.getSelection();
+    // const firstParagraph = selection.paragraphs.getFirst();
+    // firstParagraph.load("text, font/color");
+    // await context.sync();
+
+    // // 1. succcess detec Red color >
+    // // const isRedFound = await detectRedTextInParagraph(firstParagraph, context);
+    // // console.log("Result: ", isRedFound);
+
+    // console.log("d");
+
+    // Get current selection and expand to paragraph
+
+        // 2. success get all paragraphs and extract text inside >
+    // 1. Get the current active user selection
+    const selection = context.document.getSelection();
+
+    // 2. Fetch the paragraphs collection inside that selection
+    const paragraphs = selection.paragraphs;
+
+    // 3. CRITICAL: Load 'items' and the scalar properties you need for the loop
+    // This resolves the "PropertyNotLoaded" error discussed earlier
+    paragraphs.load("items/text, items/range, items/font/color");
+
+    // 4. Synchronize with the Word document execution engine
+    await context.sync();
+
+    // const selection = context.document.getSelection();
+    // selection.load("text");
+    // await context.sync();
+
+    // const paragraphs = context.document.body.paragraphs;
+    // paragraphs.load("items/text,items/range");
+    // await context.sync();
+
+    // Find paragraph containing selection
+
+    for (let i = 0; i < paragraphs.items.length; i++) {
+      const para = paragraphs.items[i];
+      const paraText = para.text;
+      const hasRedText = await detectRedTextInParagraph(para, context);
+
+      if (paraText.length > 4 && !hasRedText ) { 
+        const newValue = getUpdatedReviewValue(paraText);
+        const currentCount = extractReviewCount(paraText);
+
+        if (currentCount === 0) {
+          // No existing review marker, insert |1|
+          para.insertText(`${newValue} `, Word.InsertLocation.start);
+        } else {
+          // Replace existing marker
+          const oldMatch = paraText.match(/\s*\**\s*\|\d+\|\s*/);
+          if (oldMatch) {
+            const oldValue = oldMatch[0];
+
+
+            // replace here
+            // const searchResults = para
+            //   .getRange()
+            //   .getRange("Start")
+            //   .getRange("End")
+            //   .search(oldValue, { matchCase: false });
+
+            // searchResults.load("items");
+            // await context.sync();
+
+            // if (searchResults.items.length > 0) {
+            //   searchResults.items[0].insertText(`${newValue} `, Word.InsertLocation.replace);
+            // }
+
+
+
+        // 3. Search for the string target inside THIS paragraph
+        const searchResults = para.search(oldValue, { matchCase: false, matchWholeWord: false });
+        searchResults.load("items");
+        await context.sync();
+
+        // 4. Check if at least one match exists, then replace only the first item (index 0)
+        if (searchResults.items.length > 0) {
+            const firstMatchRange = searchResults.items[0];
+            firstMatchRange.insertText(newValue + " ", Word.InsertLocation.replace);
+        }
+
+
+
+          }
+        }
+
+        await context.sync();
+        
       }
     }
   });
