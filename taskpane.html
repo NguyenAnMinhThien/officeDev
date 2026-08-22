@@ -223,7 +223,7 @@
           const startRange = bookmarkRange.getRange("Start");
 
           // Example action: Insert text or formatting exactly at the bookmark's start
-          startRange.insertText("Text at Start: ", Word.InsertLocation.before);
+          // startRange.insertText("Text at Start: ", Word.InsertLocation.before);
           const selection = context.document.getSelection();
           const combinedRange = startRange.expandTo(selection);
           combinedRange.select();
